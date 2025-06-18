@@ -15,11 +15,14 @@ jobs:
       fail-fast: false
 
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-latest, windows-latest]
         build_type: [Release]
         c_compiler: [clang]
         include:
           - os: ubuntu-latest
+            c_compiler: clang
+            cpp_compiler: clang++
+          - os: windows-latest
             c_compiler: clang
             cpp_compiler: clang++
 
@@ -28,11 +31,6 @@ jobs:
 
       - name: Install Qt
         uses: jurplel/install-qt-action@v4
-
-      - name: Set up MinGW
-        uses: egor-tensin/setup-mingw@v2
-        with:
-          platform: x64
 
       - name: Install dependencies
         run: |
@@ -61,19 +59,3 @@ jobs:
         with:
           name: Linux
           path: ${{ steps.strings.outputs.build-output-dir }}/build-linux.tar.gz
-
-      - name: Configure CMake Windows MinGW
-        run: cmake -B build-win -G Ninja \
-          -DCMAKE_C_COMPILER=x86_64-w64-mingw32-gcc \
-          -DCMAKE_CXX_COMPILER=x86_64-w64-mingw32-g++ \
-          -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
-          -S ${{ github.workspace }}
-
-      - name: Build Windows
-        run: cmake --build build-win
-
-      - name: Upload build artifact Windows
-        uses: actions/upload-artifact@v4
-        with:
-          name: Windows
-          path: ${{ steps.strings.outputs.build-output-dir }}/build-windows.tar.gz
