@@ -32,8 +32,6 @@ target_link_libraries(${EXECUTABLE_NAME} PRIVATE
         Qt6::Widgets
 )
 
-#file(COPY ${CMAKE_SOURCE_DIR}/proxy DESTINATION ${CMAKE_BINARY_DIR})
-
 set(BUILD_DIR $<TARGET_FILE_DIR:${EXECUTABLE_NAME}>/build)
 
 add_custom_command(TARGET ${EXECUTABLE_NAME} POST_BUILD
