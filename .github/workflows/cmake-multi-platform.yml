@@ -11,19 +11,12 @@ on:
 jobs:
   build:
     env:
-      CMAKE_PREFIX_PATH: C:/a/aki-prox/Qt/6.8.3/msvc2022_64/lib/cmake
     runs-on: ${{ matrix.os }}
 
     strategy:
-      # Set fail-fast to false to ensure that feedback is delivered for all matrix combinations. Consider changing this to true when your workflow is stable.
+
       fail-fast: false
 
-      # Set up a matrix to run the following 3 configurations:
-      # 1. <Windows, Release, latest MSVC compiler toolchain on the default runner image, default generator>
-      # 2. <Linux, Release, latest GCC compiler toolchain on the default runner image, default generator>
-      # 3. <Linux, Release, latest Clang compiler toolchain on the default runner image, default generator>
-      #
-      # To add more build types (Release, Debug, RelWithDebInfo, etc.) customize the build_type list.
       matrix:
         os: [ubuntu-latest, windows-latest]
         build_type: [Release]
@@ -43,21 +36,20 @@ jobs:
       uses: jurplel/install-qt-action@v4
 
     - name: Set reusable strings
-      # Turn repeated input strings (such as the build output directory) into step outputs. These step outputs can be used throughout the workflow file.
+
       id: strings
       shell: bash
       run: |
         echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
 
     - name: Configure CMake
-      # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
-      # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
       run: >
         cmake -B ${{ steps.strings.outputs.build-output-dir }}
         -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
         -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
         -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
         -S ${{ github.workspace }}
+        $([ "${RUNNER_OS}" = "Windows" ] && echo "-DQt6_DIR=~/Qt/6.5.0/gcc_64/lib/cmake/Qt6")
 
     - name: Build
       # Build your program with the given configuration. Note that --config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
@@ -73,12 +65,12 @@ jobs:
       uses: actions/upload-artifact@v4
       if: runner.os == 'Linux'
       with:
-        name: build-artifact
+        name: Linux
         path: ${{ steps.strings.outputs.build-output-dir }}/build-linux.tar.gz
 
     - name: Upload build artifact Windows
       uses: actions/upload-artifact@v4
       if: runner.os == 'Windows'
       with:
-        name: build-artifact
+        name: Windows
         path: ${{ steps.strings.outputs.build-output-dir }}/build-windows.tar.gz
