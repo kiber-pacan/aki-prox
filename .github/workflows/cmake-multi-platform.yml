@@ -8,9 +8,6 @@ on:
 
 jobs:
   build:
-    env:
-      CMAKE_PREFIX_PATH: "${{ env.QT_ROOT_DIR }}/lib/cmake"
-
     runs-on: ${{ matrix.os }}
 
     strategy:
@@ -44,21 +41,13 @@ jobs:
 
     - name: Configure CMake
       run: |
-        if [[ "$RUNNER_OS" == "Windows" ]]; then
-          cmake -B ${{ steps.strings.outputs.build-output-dir }} \
-          -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }} \
-          -DCMAKE_C_COMPILER=${{ matrix.c_compiler }} \
-          -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
-        
-          -S ${{ github.workspace }}
-        else
           cmake -B ${{ steps.strings.outputs.build-output-dir }} \
           -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }} \
           -DCMAKE_C_COMPILER=${{ matrix.c_compiler }} \
           -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
           -S ${{ github.workspace }}
-        fi
-      shell: bash
+      env:
+        CMAKE_PREFIX_PATH: "${{ env.QT_ROOT_DIR }}/lib/cmake"
 
     - name: Build
       run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config ${{ matrix.build_type }}
