@@ -15,7 +15,7 @@ jobs:
       fail-fast: false
 
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest]
         build_type: [Release]
         c_compiler: [clang]
         include:
@@ -29,49 +29,43 @@ jobs:
       - name: Install Qt
         uses: jurplel/install-qt-action@v4
 
-      - name: Set up MinGW
-        uses: egor-tensin/setup-mingw@v2
-        with:
-          platform: x64
-
       - name: Set reusable strings
         id: strings
         shell: bash
         run: |
           echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
 
-      - name: Configure CMake
-        run: >
-          cmake -B ${{ steps.strings.outputs.build-output-dir }}
-          -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
-          -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
-          -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
-          -S ${{ github.workspace }}
-          -DCMAKE_PREFIX_PATH="C:/a/aki-prox/Qt/6.8.3/msvc2022_64"
-        env:
-          CMAKE_PREFIX_PATH: "${{ env.QT_ROOT_DIR }}/lib/cmake"
+      - name: Set up MinGW
+        uses: egor-tensin/setup-mingw@v2
+        with:
+          platform: x64
 
-      - name: Build for Linux (ELF)
+      - name: Configure CMake for Linux build
         run: |
-          cmake -B build-linux -G Ninja -DCMAKE_BUILD_TYPE=Release
-          cmake --build build-linux
-
-      - name: Configure CMake for Windows build (cross-compile)
-        run: |
-          cmake -B build-windows -G Ninja \
-            -DCMAKE_TOOLCHAIN_FILE=./toolchain-mingw64.cmake \
-            -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
-            -DQt6_DIR=${HOME}/Qt/6.8.3/gcc_64/lib/cmake/Qt6 \
+          cmake -B build-linux -G Ninja \
+            -DCMAKE_CXX_COMPILER=clang++ \
+            -DCMAKE_C_COMPILER=clang \
+            -DCMAKE_BUILD_TYPE=Release \
             -S ${{ github.workspace }}
 
-      - name: Build Windows
-        run: cmake --build build-windows --config ${{ matrix.build_type }}
+      - name: Build Linux
+        run: cmake --build build-linux
 
       - name: Upload build artifact Linux
         uses: actions/upload-artifact@v4
         with:
           name: Linux
           path: ${{ steps.strings.outputs.build-output-dir }}/build-linux.tar.gz
+
+      - name: Configure CMake Windows MinGW
+        run: cmake -B build-win -G Ninja \
+          -DCMAKE_C_COMPILER=x86_64-w64-mingw32-gcc \
+          -DCMAKE_CXX_COMPILER=x86_64-w64-mingw32-g++ \
+          -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+          -S ${{ github.workspace }}
+
+      - name: Build Windows
+        run: cmake --build build-win
 
       - name: Upload build artifact Windows
         uses: actions/upload-artifact@v4
