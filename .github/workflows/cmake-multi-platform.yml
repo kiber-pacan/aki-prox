@@ -61,11 +61,13 @@ jobs:
           cmake --build build-linux
 
       - name: Build for Windows (.exe)
+        if: matrix.os == 'ubuntu-latest'
         run: |
           cmake -B build-windows -G Ninja \
             -DCMAKE_TOOLCHAIN_FILE=toolchain-mingw64.cmake \
-            -DCMAKE_BUILD_TYPE=Release
-          cmake --build build-windows
+            -DCMAKE_BUILD_TYPE=Release \
+            -S ${{ github.workspace }}
+           cmake --build build-windows
 
       - name: Upload build artifact Linux
         uses: actions/upload-artifact@v4
