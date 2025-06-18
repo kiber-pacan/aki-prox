@@ -19,9 +19,6 @@ jobs:
         build_type: [Release]
         c_compiler: [clang]
         include:
-          - os: windows-latest
-            c_compiler: clang
-            cpp_compiler: clang++
           - os: ubuntu-latest
             c_compiler: clang
             cpp_compiler: clang++
@@ -32,11 +29,19 @@ jobs:
       - name: Install Qt
         uses: jurplel/install-qt-action@v4
 
+      - name: Set up MinGW
+        uses: egor-tensin/setup-mingw@v2
+        with:
+          platform: x64
+
+
       - name: Set reusable strings
         id: strings
         shell: bash
         run: |
           echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
+          
+          
 
       - name: Configure CMake
         run: >
@@ -64,14 +69,12 @@ jobs:
 
       - name: Upload build artifact Linux
         uses: actions/upload-artifact@v4
-        if: runner.os == 'Linux'
         with:
           name: Linux
           path: ${{ steps.strings.outputs.build-output-dir }}/build-linux.tar.gz
 
       - name: Upload build artifact Windows
         uses: actions/upload-artifact@v4
-        if: runner.os == 'Windows'
         with:
           name: Windows
           path: ${{ steps.strings.outputs.build-output-dir }}/build-windows.tar.gz
