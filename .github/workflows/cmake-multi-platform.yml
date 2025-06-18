@@ -26,10 +26,12 @@ jobs:
             c_compiler: clang
             cpp_compiler: clang++
         exclude:
-          - os: windows-latest
-            c_compiler: clang
-          - os: ubuntu-latest
-            c_compiler: cl
+            - os: windows-latest
+              c_compiler: gcc
+            - os: windows-latest
+              c_compiler: clang
+            - os: ubuntu-latest
+              c_compiler: cl
 
     steps:
       - uses: actions/checkout@v4
@@ -50,9 +52,6 @@ jobs:
           -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
           -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
           -S ${{ github.workspace }}
-          -CMAKE_PREFIX_PATH=~/Qt/6.8.3/msvc2022_64/lib/cmake/Qt6/
-          -DQt6_DIR:PATH=~/Qt/6.8.3/msvc2022_64/lib/cmake/Qt6/
-          -DQT_ADDITIONAL_PACKAGES_PREFIX_PATH=~/Qt/6.8.3/msvc2022_64
         env:
           CMAKE_PREFIX_PATH: "${{ env.QT_ROOT_DIR }}/lib/cmake"
 
