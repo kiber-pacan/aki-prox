@@ -39,12 +39,25 @@ add_custom_command(TARGET ${EXECUTABLE_NAME} POST_BUILD
 
         COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:${EXECUTABLE_NAME}>" "${BUILD_DIR}/"
         COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_SOURCE_DIR}/proxy" "$<TARGET_FILE_DIR:${EXECUTABLE_NAME}>/build/proxy"
+        COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_SOURCE_DIR}/proxy" "$<TARGET_FILE_DIR:${EXECUTABLE_NAME}>/proxy"
+
 
         COMMAND ${CMAKE_COMMAND} -E remove -f "${BUILD_DIR}.tar.gz"
         COMMAND ${CMAKE_COMMAND} -E tar "cfv" "${BUILD_DIR}.tar.gz" "${BUILD_DIR}"
-        COMMAND ${CMAKE_COMMAND} -E remove_directory -f "${BUILD_DIR}"
 
+        COMMAND ${CMAKE_COMMAND} -E remove_directory -f "${BUILD_DIR}"
 )
 
+if(WIN32)
+    add_custom_command(TARGET ${EXECUTABLE_NAME} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E rename "${BUILD_DIR}.tar.gz" "build-windows.tar.gz"
+    )
+elseif(UNIX)
+    add_custom_command(TARGET ${EXECUTABLE_NAME} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E rename "${BUILD_DIR}.tar.gz" "build-linux.tar.gz"
+    )
+endif()
+
+set(CMAKE_PREFIX_PATH "C:/Qt/6.8.3/msvc2022_64/lib/cmake" CACHE PATH "Qt6 path" FORCE)
 
 
