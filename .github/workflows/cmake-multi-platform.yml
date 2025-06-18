@@ -32,18 +32,13 @@ jobs:
       - name: Install Qt
         uses: jurplel/install-qt-action@v4
 
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libgl1-mesa-dev libglu1-mesa-dev
-
       - name: Set reusable strings
         id: strings
         shell: bash
         run: |
           echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
 
-      - name: Configure CMake for Linux build
+      - name: Configure CMake
         run: |
           cmake -B build-linux -G Ninja \
             -DCMAKE_CXX_COMPILER=clang++ \
@@ -51,7 +46,7 @@ jobs:
             -DCMAKE_BUILD_TYPE=Release \
             -S ${{ github.workspace }}
 
-      - name: Build Linux
+      - name: Build
         run: cmake --build build-linux
 
       - name: Upload build artifact Linux
