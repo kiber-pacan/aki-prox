@@ -15,11 +15,11 @@ jobs:
       fail-fast: false
 
       matrix:
-        os: [ubuntu-bionic]
+        os: [ubuntu-latest]
         build_type: [Release]
         c_compiler: [clang]
         include:
-          - os: ubuntu-bionic
+          - os: ubuntu-latest
             c_compiler: clang
             cpp_compiler: clang++
 
@@ -42,22 +42,7 @@ jobs:
         run: |
           echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
 
-      - name: Configure CMake for Linux build
-        run: |
-          cmake -B build-linux -G Ninja \
-            -DCMAKE_CXX_COMPILER=clang++ \
-            -DCMAKE_C_COMPILER=clang \
-            -DCMAKE_BUILD_TYPE=Release \
-            -S ${{ github.workspace }}
 
-      - name: Build Linux
-        run: cmake --build build-linux
-
-      - name: Upload build artifact Linux
-        uses: actions/upload-artifact@v4
-        with:
-          name: Linux
-          path: ${{ steps.strings.outputs.build-output-dir }}/build-linux.tar.gz
 
       - name: Configure CMake Windows MinGW
         run: cmake -B build-win -G Ninja \
