@@ -52,7 +52,7 @@ jobs:
           -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
           -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
           -S ${{ github.workspace }}
-          -DCMAKE_PREFIX_PATH="C:/a/aki-prox/Qt/6.8.3/msvc2022_64/lib/cmake/"
+          -DCMAKE_PREFIX_PATH="C:/a/aki-prox/Qt/6.8.3/msvc2022_64"
         env:
           CMAKE_PREFIX_PATH: "${{ env.QT_ROOT_DIR }}/lib/cmake"
 
