@@ -8,6 +8,9 @@ on:
 
 jobs:
   build:
+    env:
+      CMAKE_PREFIX_PATH: "${{ env.QT_ROOT_DIR }}/lib/cmake"
+
     runs-on: ${{ matrix.os }}
 
     strategy:
