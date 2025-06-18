@@ -3,18 +3,23 @@ cmake_minimum_required(VERSION 3.16)
 project(aki-prox)
 set(EXECUTABLE_NAME ${PROJECT_NAME})
 
-add_compile_definitions(PROJECT_ROOT_DIR="${CMAKE_SOURCE_DIR}")
-
-set(CMAKE_CXX_STANDARD 26)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
+# Если собираешь локально на Windows, Qt можно прописать здесь (а не в CI)
+# или можно прокидывать через -DCMAKE_PREFIX_PATH=
+if(NOT CMAKE_PREFIX_PATH)
+    set(CMAKE_PREFIX_PATH "C:/Qt/6.8.3/msvc2022_64/lib/cmake" CACHE PATH "Qt6 path")
+endif()
+
+# Qt
 find_package(Qt6 REQUIRED COMPONENTS Widgets)
+qt_standard_project_setup()
 
-qt_standard_project_setup()  # только если используешь Qt6 CMake API
-
+# Исходники
 add_executable(${EXECUTABLE_NAME}
         main.cpp
         libs/QAnsiTextEdit-main/src/QAnsiTextEdit.cpp
@@ -28,36 +33,27 @@ target_include_directories(${EXECUTABLE_NAME} PRIVATE
         sep
 )
 
+target_compile_definitions(${EXECUTABLE_NAME} PRIVATE
+        PROJECT_ROOT_DIR="${CMAKE_SOURCE_DIR}"
+)
+
 target_link_libraries(${EXECUTABLE_NAME} PRIVATE
         Qt6::Widgets
 )
 
-set(BUILD_DIR $<TARGET_FILE_DIR:${EXECUTABLE_NAME}>/build)
+# Пути и архивирование
+set(OUTPUT_DIR $<TARGET_FILE_DIR:${EXECUTABLE_NAME}>)
+set(BUILD_DIR "${OUTPUT_DIR}/build")
+set(ARCHIVE_NAME "${OUTPUT_DIR}/build-${CMAKE_SYSTEM_NAME}.tar.gz")
 
+# Архивация и копирование
 add_custom_command(TARGET ${EXECUTABLE_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E make_directory "${BUILD_DIR}"
-
         COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:${EXECUTABLE_NAME}>" "${BUILD_DIR}/"
-        COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_SOURCE_DIR}/proxy" "$<TARGET_FILE_DIR:${EXECUTABLE_NAME}>/build/proxy"
-        COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_SOURCE_DIR}/proxy" "$<TARGET_FILE_DIR:${EXECUTABLE_NAME}>/proxy"
-
-
-        COMMAND ${CMAKE_COMMAND} -E remove -f "${BUILD_DIR}.tar.gz"
-        COMMAND ${CMAKE_COMMAND} -E tar "cfv" "${BUILD_DIR}.tar.gz" "${BUILD_DIR}"
-
-        COMMAND ${CMAKE_COMMAND} -E remove_directory -f "${BUILD_DIR}"
+        COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_SOURCE_DIR}/proxy" "${BUILD_DIR}/proxy"
+        COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_SOURCE_DIR}/proxy" "${OUTPUT_DIR}/proxy"
+        COMMAND ${CMAKE_COMMAND} -E remove -f "${ARCHIVE_NAME}"
+        COMMAND ${CMAKE_COMMAND} -E tar cfv "${ARCHIVE_NAME}" "${OUTPUT_DIR}" build
+        COMMAND ${CMAKE_COMMAND} -E remove_directory "${BUILD_DIR}"
 )
-
-if(WIN32)
-    add_custom_command(TARGET ${EXECUTABLE_NAME} POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E rename "${BUILD_DIR}.tar.gz" "build-windows.tar.gz"
-    )
-elseif(UNIX)
-    add_custom_command(TARGET ${EXECUTABLE_NAME} POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E rename "${BUILD_DIR}.tar.gz" "build-linux.tar.gz"
-    )
-endif()
-
-set(CMAKE_PREFIX_PATH "C:/Qt/6.8.3/msvc2022_64/lib/cmake" CACHE PATH "Qt6 path" FORCE)
-
 
