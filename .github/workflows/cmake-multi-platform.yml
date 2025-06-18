@@ -29,20 +29,11 @@ jobs:
       - name: Install Qt
         uses: jurplel/install-qt-action@v4
 
-      - name: Set up MinGW
-        uses: egor-tensin/setup-mingw@v2
-        with:
-          platform: x64
-
-
       - name: Set reusable strings
         id: strings
         shell: bash
         run: |
           echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
-          
-          
-
       - name: Configure CMake
         run: >
           cmake -B ${{ steps.strings.outputs.build-output-dir }}
@@ -61,13 +52,11 @@ jobs:
           cmake --build build-linux
 
       - name: Build for Windows (.exe)
-        if: matrix.os == 'ubuntu-latest'
         run: |
           cmake -B build-windows -G Ninja \
             -DCMAKE_TOOLCHAIN_FILE=toolchain-mingw64.cmake \
-            -DCMAKE_BUILD_TYPE=Release \
-            -S ${{ github.workspace }}
-           cmake --build build-windows
+            -DCMAKE_BUILD_TYPE=Release
+          cmake --build build-windows
 
       - name: Upload build artifact Linux
         uses: actions/upload-artifact@v4
