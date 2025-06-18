@@ -14,6 +14,7 @@
 #include <QTimer>
 #include <QAnsiTextEdit.h>
 #include <json.hpp>
+#include <QThread>
 
 class SingBoxGUI : public QWidget {
 public:
@@ -23,7 +24,18 @@ public:
 
         auto *layout = new QFormLayout(this);
 
-        status = new QLabel("sing-box неактивен.");
+        QHBoxLayout* statusLayout = new QHBoxLayout;
+
+        singStatus = new QLabel("sing-box неактивен.");
+        proxyStatus = new QLabel("Прокси неактивен.");
+        systemProxyStatus = new QLabel("Системный прокси не установлен.");
+
+        statusLayout->addWidget(singStatus);
+        statusLayout->addWidget(proxyStatus);
+        statusLayout->addWidget(systemProxyStatus);
+
+        statusLayout->setAlignment(Qt::AlignCenter);
+        statusLayout->setSpacing(80);
 
         ipEdit = new QLineEdit("150.241.69.126");
         portEdit = new QLineEdit("3452");
@@ -32,17 +44,17 @@ public:
         passwordEdit->setEchoMode(QLineEdit::Password);
 
         timer = new QTimer(this);
-        timer->setInterval(250);
+        timer->setInterval(75);
 
-        toggleSingBtn = new QPushButton("Запустить sing-box");
-        toggleSystemProxyBtn = new QPushButton("Установить системный прокси");
-        toggleProxyBtn = new QPushButton("Включить прокси");
+        toggleSingBtn = new QPushButton("Запустить sing-box.");
+        toggleProxyBtn = new QPushButton("Включить прокси.");
+        toggleSystemProxyBtn = new QPushButton("Установить системный прокси.");
 
         consoleOutput = new QAnsiTextEdit();
         consoleOutput->setReadOnly(true);
         consoleOutput->setMinimumHeight(150);
 
-        layout->addRow(status);
+        layout->addRow(statusLayout);
         layout->addRow("IP сервера:", ipEdit);
         layout->addRow("Порт:", portEdit);
         layout->addRow("Метод:", methodEdit);
@@ -50,8 +62,8 @@ public:
 
         QHBoxLayout* buttonLayout = new QHBoxLayout;
         buttonLayout->addWidget(toggleSingBtn);
-        buttonLayout->addWidget(toggleSystemProxyBtn);
         buttonLayout->addWidget(toggleProxyBtn);
+        buttonLayout->addWidget(toggleSystemProxyBtn);
 
 
         layout->addRow(buttonLayout);
@@ -72,16 +84,47 @@ public:
         init();
     }
 
+    ~SingBoxGUI() {
+        runScript("bash", unsetPath.data());
+        if (process && process->state() != QProcess::NotRunning) {
+            process->terminate();
+            if (!process->waitForFinished(3000)) {
+                process->kill();
+                process->waitForFinished();
+            }
+        }
+    }
+
     nlohmann::json proxyOff = {
         { "log", {
-                { "level", "info" },
-                { "output", "stderr" }
+            { "level", "info" },
+            { "output", "stderr" }
+        }},
+        { "inbounds", {{
+            { "type", "mixed" },
+            { "listen", "127.0.0.1" },
+            { "listen_port", 2080 },
+            { "tag", "mixed-in" }
+        }}},
+        { "outbounds", {{
+            { "type", "direct" },
+            { "tag", "direct-out" }
+        }}},
+        { "route", {
+            { "rules", {{
+                { "type", "default" },
+                { "outbound", "direct-out" }
+            }}}
         }}
     };
 
+    std::string path = std::filesystem::current_path().string();
+    std::string setPath = path + "/proxy/set-vars-fish.sh";
+    std::string unsetPath = path + "/proxy/unset-vars-fish.sh";
+
 private:
     QLineEdit *ipEdit, *portEdit, *methodEdit, *passwordEdit;
-    QLabel *status;
+    QLabel *singStatus, *proxyStatus, *systemProxyStatus;
     QTimer *timer;
     QAnsiTextEdit *consoleOutput;
     QProcess *process;
@@ -114,32 +157,82 @@ private:
         };
     }
 
+    static bool runScript(const QString& shellPath, const QString& scriptPath, const QStringList& arguments = {}) {
+        QProcess process;
+
+        QStringList args = {scriptPath};
+        args.append(arguments);
+
+        process.start(shellPath, args);
+
+        if (!process.waitForStarted(3000)) {
+            qWarning() << "Не удалось запустить процесс";
+            return false;
+        }
+
+        process.waitForFinished();
+
+        QString output = process.readAllStandardOutput();
+        QString error = process.readAllStandardError();
+
+        qDebug() << "[STDOUT]" << output.trimmed();
+        if (!error.isEmpty()) qWarning() << "[STDERR]" << error.trimmed();
+
+        int exitCode = process.exitCode();
+        if (exitCode != 0) {
+            qWarning() << "Скрипт завершился с ошибкой, код:" << exitCode;
+            return false;
+        }
+
+        return true;
+    }
+
+
     void init() {
-        QProcess::execute("chmod", {"+x", PROJECT_ROOT_DIR "/proxy/set-vars-fish.sh"});
-        QProcess::execute("chmod", {"+x", PROJECT_ROOT_DIR "/proxy/unset-vars-fish.sh"});
+        const char* setProxy = setPath.c_str();
+        const char* unSetProxy = unsetPath.c_str();
+
+        QProcess::execute("chmod", {"+x", setProxy});
+        QProcess::execute("chmod", {"+x", unSetProxy});
 
         const char* https_proxy = getenv("https_proxy");
 
+        qDebug() << "https_proxy:" << https_proxy;
+        
         systemProxy = https_proxy == nullptr;
     }
 
+    void toggle(const QString& pid) {
+        config = config == proxyOff ? getConfig() : proxyOff;
+
+        loadFile(config);
+        startSingBoxProcess(pid);
+    }
+
     void toggleProxy() {
-        if (config == proxyOff) {
-            config = getConfig();
-        } else {
-            config = proxyOff;
+        if (process->state() != QProcess::NotRunning) {
+            process->terminate();
+
+            if (!process->waitForFinished(1000)) {
+                process->kill();
+                process->waitForFinished();
+            }
+
+            toggle(nullptr);  // Всегда вызываем toggle() после завершения
         }
     }
 
-    void toggleSystemProxy() {
-        const char* https_proxy = getenv("https_proxy");
-        systemProxy = !systemProxy;
 
-        if (https_proxy == nullptr) {
-            QProcess::execute(PROJECT_ROOT_DIR "/proxy/set-vars-fish.sh");
+    void toggleSystemProxy() {
+        //process->setWorkingDirectory(path.data());
+
+        if (systemProxy) {
+            runScript("bash", setPath.data());
         } else {
-            QProcess::execute(PROJECT_ROOT_DIR "/proxy/unset-vars-fish.sh");
+            runScript("bash", unsetPath.data());
         }
+
+        systemProxy = !systemProxy;
     }
 
     void toggleSing() {
@@ -156,14 +249,10 @@ private:
         }
     }
 
-    void startSingBox(const QString& pid) {
-        config = getConfig();
-
-        loadFile();
-
+    void startSingBoxProcess(const QString& pid) {
         if (!pid.isEmpty()) {
             QMessageBox::information(nullptr, "Информация", "sing-box уже запущен, перезапускаем процесс.");
-            QProcess::execute("kill", {pid});
+            //QProcess::execute("kill", {pid});
         }
 
         // Запускаем sing-box
@@ -172,15 +261,25 @@ private:
         #else
                 process->setProgram("sing-box");
         #endif
-                process->setArguments({"run", "-c", "config.json"});
+
+        process->setArguments({"run", "-c", "config.json"});
 
         consoleOutput->appendAnsiText("Запуск sing-box...");
 
         process->start();
-        if (!process->waitForStarted()) {
+        if (!process->waitForStarted(3000)) {
             QMessageBox::critical(this, "Ошибка", "Не удалось запустить sing-box");
             consoleOutput->appendAnsiText("Ошибка запуска sing-box!");
         }
+    }
+
+
+    void startSingBox(const QString& pid) {
+        config = getConfig();
+
+        loadFile(config);
+
+        startSingBoxProcess(pid);
     }
 
     void stopSingBox(const QString& pid) const {
@@ -191,7 +290,7 @@ private:
         }
     }
 
-    void loadFile() {
+    void loadFile(const nlohmann::json& config) {
         QFile file("config.json");
         if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
             QMessageBox::critical(this, "Ошибка", "Не удалось создать config.json");
@@ -203,6 +302,7 @@ private:
         out << QString::fromStdString(config.dump(4));
         file.close();
     }
+
 
     void readProcessOutput() {
         QByteArray output = process->readAllStandardOutput();
@@ -222,18 +322,40 @@ private:
 
     void timeout() {
         if (process->state() == QProcess::NotRunning) {
-            status->setText("sing-box неактивен!");
-            toggleSingBtn->setText("Запустить sing-box");
+            singStatus->setText("sing-box неактивен.");
+            singStatus->setStyleSheet("color: #fc0303;");
+
+            toggleSingBtn->setText("Запустить sing-box.");
 
         } else if (process->state() == QProcess::Running) {
-            status->setText("sing-box активен!");
-            toggleSingBtn->setText("Отключить sing-box");
+            singStatus->setText("sing-box активен!");
+            singStatus->setStyleSheet("color: #0bfc03;");
+
+            toggleSingBtn->setText("Отключить sing-box.");
         }
 
         if (systemProxy) {
+            systemProxyStatus->setText("Системный прокси неактивен.");
+            systemProxyStatus->setStyleSheet("color: #fc0303;");
+
             toggleSystemProxyBtn->setText("Установить системный прокси.");
         } else {
+            systemProxyStatus->setText("Системный прокси активен!");
+            systemProxyStatus->setStyleSheet("color: #0bfc03;");
+
             toggleSystemProxyBtn->setText("Очистить системный прокси.");
+        }
+
+        if (config == proxyOff || process->state() == QProcess::NotRunning) {
+            proxyStatus->setText("Прокси неактивен.");
+            proxyStatus->setStyleSheet("color: #fc0303;");
+
+            toggleProxyBtn->setText("Включить прокси.");
+        } else if (process->state() == QProcess::Running) {
+            proxyStatus->setText("Прокси активен!");
+            proxyStatus->setStyleSheet("color: #0bfc03;");
+
+            toggleProxyBtn->setText("Отключить прокси.");
         }
     }
 };
