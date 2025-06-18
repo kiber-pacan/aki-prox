@@ -41,13 +41,13 @@ jobs:
         echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
 
     - name: Configure CMake
-      run: |
-        cmake -B ${{ steps.strings.outputs.build-output-dir }} \
-        -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }} \
-        -DCMAKE_C_COMPILER=${{ matrix.c_compiler }} \
-        -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
-        -S ${{ github.workspace }} \
-        $([ "${RUNNER_OS}" = "Windows" ] && echo "-DQt6_DIR=~/Qt/6.5.0/gcc_64/lib/cmake/Qt6")
+      run: >
+        cmake -B ${{ steps.strings.outputs.build-output-dir }}
+        -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
+        -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
+        -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+        -S ${{ github.workspace }}
+
 
     - name: Build
       run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config ${{ matrix.build_type }}
