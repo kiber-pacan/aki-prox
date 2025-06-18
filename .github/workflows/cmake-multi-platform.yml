@@ -27,25 +27,25 @@ jobs:
             cpp_compiler: clang++
 
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Add clang path to $PATH env
-      shell: bash
-      if: runner.os == 'Windows'
-      run: echo "PATH=$PATH:C:\msys64\mingw64\bin" >> $GITHUB_ENV
+      - name: Add clang path to $PATH env
+        shell: bash
+        if: runner.os == 'Windows'
+        run: echo "PATH=$PATH:C:\msys64\mingw64\bin" >> $GITHUB_ENV
 
-    - name: Install Qt
-      uses: jurplel/install-qt-action@v4
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
 
-    - name: Set reusable strings
+      - name: Set reusable strings
 
-      id: strings
-      shell: bash
-      run: |
-        echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
+        id: strings
+        shell: bash
+        run: |
+          echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
 
-    - name: Configure CMake
-      run: |
+      - name: Configure CMake
+        run: |
           cmake -B ${{ steps.strings.outputs.build-output-dir }}
           -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
           -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
@@ -53,23 +53,23 @@ jobs:
           -S ${{ github.workspace }}
 
 
-    - name: Build
-      run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config ${{ matrix.build_type }}
+      - name: Build
+        run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config ${{ matrix.build_type }}
 
-    - name: Test
-      working-directory: ${{ steps.strings.outputs.build-output-dir }}
-      run: ctest --build-config ${{ matrix.build_type }}
+      - name: Test
+        working-directory: ${{ steps.strings.outputs.build-output-dir }}
+        run: ctest --build-config ${{ matrix.build_type }}
 
-    - name: Upload build artifact Linux
-      uses: actions/upload-artifact@v4
-      if: runner.os == 'Linux'
-      with:
-        name: Linux
-        path: ${{ steps.strings.outputs.build-output-dir }}/build-linux.tar.gz
+      - name: Upload build artifact Linux
+        uses: actions/upload-artifact@v4
+        if: runner.os == 'Linux'
+        with:
+          name: Linux
+          path: ${{ steps.strings.outputs.build-output-dir }}/build-linux.tar.gz
 
-    - name: Upload build artifact Windows
-      uses: actions/upload-artifact@v4
-      if: runner.os == 'Windows'
-      with:
-        name: Windows
-        path: ${{ steps.strings.outputs.build-output-dir }}/build-windows.tar.gz
+      - name: Upload build artifact Windows
+        uses: actions/upload-artifact@v4
+        if: runner.os == 'Windows'
+        with:
+          name: Windows
+          path: ${{ steps.strings.outputs.build-output-dir }}/build-windows.tar.gz
