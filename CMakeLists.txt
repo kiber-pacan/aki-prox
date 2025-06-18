@@ -32,4 +32,21 @@ target_link_libraries(${EXECUTABLE_NAME} PRIVATE
         Qt6::Widgets
 )
 
-file(COPY ${CMAKE_SOURCE_DIR}/proxy DESTINATION ${CMAKE_BINARY_DIR})
+#file(COPY ${CMAKE_SOURCE_DIR}/proxy DESTINATION ${CMAKE_BINARY_DIR})
+
+set(BUILD_DIR $<TARGET_FILE_DIR:${EXECUTABLE_NAME}>/build)
+
+add_custom_command(TARGET ${EXECUTABLE_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${BUILD_DIR}"
+
+        COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:${EXECUTABLE_NAME}>" "${BUILD_DIR}/"
+        COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_SOURCE_DIR}/proxy" "$<TARGET_FILE_DIR:${EXECUTABLE_NAME}>/build/proxy"
+
+        COMMAND ${CMAKE_COMMAND} -E remove -f "${BUILD_DIR}.tar.gz"
+        COMMAND ${CMAKE_COMMAND} -E tar "cfv" "${BUILD_DIR}.tar.gz" "${BUILD_DIR}"
+        COMMAND ${CMAKE_COMMAND} -E remove_directory -f "${BUILD_DIR}"
+
+)
+
+
+
