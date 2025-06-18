@@ -29,6 +29,11 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
+    - name: Add clang path to $PATH env
+      shell: bash
+      if: runner.os == 'Windows'
+      run: echo "PATH=$PATH:C:\msys64\mingw64\bin" >> $GITHUB_ENV
+
     - name: Install Qt
       uses: jurplel/install-qt-action@v4
 
@@ -41,10 +46,10 @@ jobs:
 
     - name: Configure CMake
       run: |
-          cmake -B ${{ steps.strings.outputs.build-output-dir }} \
-          -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }} \
-          -DCMAKE_C_COMPILER=${{ matrix.c_compiler }} \
-          -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+          cmake -B ${{ steps.strings.outputs.build-output-dir }}
+          -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
+          -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
+          -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
           -S ${{ github.workspace }}
       env:
         CMAKE_PREFIX_PATH: "${{ env.QT_ROOT_DIR }}/lib/cmake"
