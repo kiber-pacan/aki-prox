@@ -10,6 +10,8 @@ on:
 
 jobs:
   build:
+    env:
+      CMAKE_PREFIX_PATH: C:/a/aki-prox/Qt/6.8.3/msvc2022_64/lib/cmake
     runs-on: ${{ matrix.os }}
 
     strategy:
