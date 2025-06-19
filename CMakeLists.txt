@@ -55,6 +55,7 @@ if (WIN32)
     else()
         message(WARNING "windeployqt not found. Skipping deploy step.")
     endif()
+    message("windeployqt.")
 endif()
 
 # Архивация и копирование
