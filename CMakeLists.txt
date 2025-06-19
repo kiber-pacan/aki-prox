@@ -42,13 +42,11 @@ target_link_libraries(${EXECUTABLE_NAME} PRIVATE
 )
 
 # Deploy script (windeployqt)
-qt_generate_deploy_app_script(
-        TARGET ${EXECUTABLE_NAME}
-        OUTPUT_SCRIPT deploy_script
-        NO_UNSUPPORTED_PLATFORM_ERROR
-)
-
-install(SCRIPT ${deploy_script})
+if(WIN32)
+    add_custom_command(TARGET aki-prox POST_BUILD
+            COMMAND "${Qt6_DIR}/bin/windeployqt.exe" --release "$<TARGET_FILE_DIR:aki-prox>"
+    )
+endif ()
 
 # Setting names
 set(OUTPUT_DIR $<TARGET_FILE_DIR:${EXECUTABLE_NAME}>)
