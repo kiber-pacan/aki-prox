@@ -17,7 +17,7 @@ endif()
 
 # Qt
 find_package(Qt6 REQUIRED COMPONENTS Widgets)
-qt_standard_project_setup()
+#qt_standard_project_setup()
 
 # Исходники
 add_executable(${EXECUTABLE_NAME}
@@ -46,6 +46,17 @@ set(OUTPUT_DIR $<TARGET_FILE_DIR:${EXECUTABLE_NAME}>)
 set(BUILD_DIR "${OUTPUT_DIR}/build")
 set(ARCHIVE_NAME "${OUTPUT_DIR}/aki-prox-${CMAKE_SYSTEM_NAME}.tar.gz")
 
+if (WIN32)
+    find_program(WINDEPLOYQT_EXECUTABLE windeployqt HINTS "${Qt6_DIR}/../../bin")
+    if (WINDEPLOYQT_EXECUTABLE)
+        add_custom_command(TARGET ${EXECUTABLE_NAME} POST_BUILD
+                COMMAND "${WINDEPLOYQT_EXECUTABLE}" --release "$<TARGET_FILE_DIR:${EXECUTABLE_NAME}>"
+        )
+    else()
+        message(WARNING "windeployqt not found. Skipping deploy step.")
+    endif()
+endif()
+
 # Архивация и копирование
 add_custom_command(TARGET ${EXECUTABLE_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E make_directory "${BUILD_DIR}"
@@ -57,10 +68,6 @@ add_custom_command(TARGET ${EXECUTABLE_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E remove_directory "${BUILD_DIR}"
 )
 
-if (WIN32)
-add_custom_command(TARGET aki-prox POST_BUILD
-        COMMAND "${Qt6_DIR}/../../bin/windeployqt.exe" --release "$<TARGET_FILE_DIR:aki-prox>"
-)
-endif ()
+
 
 #skebedi
