@@ -16,7 +16,7 @@ jobs:
 
       matrix:
         os: [ubuntu-latest, windows-latest]
-        build_type: [Debug]
+        build_type: [release]
         c_compiler: [clang, cl]
         include:
           - os: ubuntu-latest
@@ -52,7 +52,7 @@ jobs:
           -S ${{ github.workspace }}
 
       - name: Build
-        run: cmake --build ${{ steps.strings.outputs.build-output-dir }}
+        run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config Release
 
 
       - name: Upload build artifact Linux
