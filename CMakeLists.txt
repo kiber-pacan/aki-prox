@@ -62,3 +62,5 @@ add_custom_command(TARGET aki-prox POST_BUILD
         COMMAND "${Qt6_DIR}/../../bin/windeployqt.exe" --release "$<TARGET_FILE_DIR:aki-prox>"
 )
 endif ()
+
+#skebedi
