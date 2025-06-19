@@ -44,9 +44,9 @@ target_link_libraries(${EXECUTABLE_NAME} PRIVATE
 # Deploy script (windeployqt)
 if(WIN32)
     add_custom_command(TARGET ${EXECUTABLE_NAME} POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E "${Qt6_DIR}/bin/windeployqt.exe" --release "$<TARGET_FILE_DIR:aki-prox>"
+            COMMAND "${Qt6_DIR}/../../bin/windeployqt.exe" --release "$<TARGET_FILE_DIR:${EXECUTABLE_NAME}>"
     )
-endif ()
+endif()
 
 # Setting names
 set(OUTPUT_DIR $<TARGET_FILE_DIR:${EXECUTABLE_NAME}>)
