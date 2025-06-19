@@ -54,6 +54,7 @@ set(OUTPUT_DIR $<TARGET_FILE_DIR:${EXECUTABLE_NAME}>)
 set(BUILD_DIR "${OUTPUT_DIR}/build")
 set(ARCHIVE_NAME "${OUTPUT_DIR}/aki-prox-${CMAKE_SYSTEM_NAME}.tar.gz")
 
+if(UNIX)
 # Archivation and copy
 add_custom_command(TARGET ${EXECUTABLE_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E make_directory "${BUILD_DIR}"
@@ -64,6 +65,7 @@ add_custom_command(TARGET ${EXECUTABLE_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E tar cfv "${ARCHIVE_NAME}" "${OUTPUT_DIR}" build
         COMMAND ${CMAKE_COMMAND} -E remove_directory "${BUILD_DIR}"
 )
+endif ()
 
 
 
