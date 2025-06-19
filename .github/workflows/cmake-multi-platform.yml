@@ -67,4 +67,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Windows
-          path: ${{ steps.strings.outputs.build-output-dir }}/Debug
+          path: ${{ steps.strings.outputs.build-output-dir }}/Release
