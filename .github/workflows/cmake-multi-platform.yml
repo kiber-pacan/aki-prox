@@ -43,7 +43,9 @@ jobs:
         run: |
           echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
 
-      - name: Configure CMake
+      - name: Configure CMake (Linux)
+        if: runner.os == 'Linux'
+        shell: bash
         run: |
           cmake -B ${{ steps.strings.outputs.build-output-dir }} -G Ninja \
             -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }} \
@@ -51,9 +53,18 @@ jobs:
             -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
             -S ${{ github.workspace }}
 
+      - name: Configure CMake (Windows)
+        if: runner.os == 'Windows'
+        run: |
+            cmake -B ${{ steps.strings.outputs.build-output-dir }} -G Ninja ^
+              -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }} ^
+              -DCMAKE_C_COMPILER=${{ matrix.c_compiler }} ^
+              -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} ^
+              -S ${{ github.workspace }}
+
       - name: Build
         run: cmake --build ${{ steps.strings.outputs.build-output-dir }}
-        
+
 
       - name: Upload build artifact Linux
         if: runner.os == 'Linux'
