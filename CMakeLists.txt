@@ -57,3 +57,8 @@ add_custom_command(TARGET ${EXECUTABLE_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E remove_directory "${BUILD_DIR}"
 )
 
+if (WIN32)
+add_custom_command(TARGET aki-prox POST_BUILD
+        COMMAND "${Qt6_DIR}/../../bin/windeployqt.exe" --release "$<TARGET_FILE_DIR:aki-prox>"
+)
+endif ()
