@@ -119,8 +119,8 @@ public:
     };
 
     std::string path = std::filesystem::current_path().string();
-    std::string setPath = path + "/proxy/set-vars-fish.sh";
-    std::string unsetPath = path + "/proxy/unset-vars-fish.sh";
+    std::string setPath = path + "/scripts/set-vars.sh";
+    std::string unsetPath = path + "/scripts/unset-vars.sh";
 
 private:
     QLineEdit *ipEdit, *portEdit, *methodEdit, *passwordEdit;
