@@ -44,7 +44,7 @@ target_link_libraries(${EXECUTABLE_NAME} PRIVATE
 # Пути и архивирование
 set(OUTPUT_DIR $<TARGET_FILE_DIR:${EXECUTABLE_NAME}>)
 set(BUILD_DIR "${OUTPUT_DIR}/build")
-set(ARCHIVE_NAME "${OUTPUT_DIR}/build-${CMAKE_SYSTEM_NAME}.tar.gz")
+set(ARCHIVE_NAME "${OUTPUT_DIR}/aki-prox-${CMAKE_SYSTEM_NAME}.tar.gz")
 
 # Архивация и копирование
 add_custom_command(TARGET ${EXECUTABLE_NAME} POST_BUILD

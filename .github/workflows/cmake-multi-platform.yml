@@ -46,13 +46,20 @@ jobs:
 
       - name: Configure CMake
         run: |
-          cmake -B build-linux -G Ninja -DCMAKE_CXX_COMPILER=c++ -DCMAKE_C_COMPILER=cc -DCMAKE_BUILD_TYPE=Release -S ${{ github.workspace }}
+          cmake -B build -G Ninja -DCMAKE_CXX_COMPILER=c++ -DCMAKE_C_COMPILER=cc -DCMAKE_BUILD_TYPE=Release -S ${{ github.workspace }}
 
       - name: Build
-        run: cmake --build build-linux
+        run: cmake --build build
+
 
       - name: Upload build artifact Linux
         uses: actions/upload-artifact@v4
         with:
           name: Linux
-          path: ${{ steps.strings.outputs.build-output-dir }}/build-linux.tar.gz
+          path: ${{ steps.strings.outputs.build-output-dir }}/aki-prox-Linux.tar.gz
+
+      - name: Upload build artifact Windows
+        uses: actions/upload-artifact@v4
+        with:
+          name: Windows
+          path: ${{ steps.strings.outputs.build-output-dir }}/aki-prox-Windows.tar.gz
