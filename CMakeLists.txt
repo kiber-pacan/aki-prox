@@ -44,7 +44,6 @@ target_link_libraries(${EXECUTABLE_NAME} PRIVATE
 # Deploy script (windeployqt)
 if(WIN32)
     find_program(WINDEPLOYQT_EXECUTABLE windeployqt HINTS "${Qt6_DIR}/../../bin")
-
     add_custom_command(TARGET ${EXECUTABLE_NAME} POST_BUILD
             COMMAND "${WINDEPLOYQT_EXECUTABLE}" --release "$<TARGET_FILE_DIR:${EXECUTABLE_NAME}>"
     )
@@ -59,10 +58,10 @@ set(ARCHIVE_NAME "${OUTPUT_DIR}/aki-prox-${CMAKE_SYSTEM_NAME}.tar.gz")
 add_custom_command(TARGET ${EXECUTABLE_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E make_directory "${BUILD_DIR}"
         COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:${EXECUTABLE_NAME}>" "${BUILD_DIR}/"
-        COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_SOURCE_DIR}/proxy" "${BUILD_DIR}/proxy"
-        COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_SOURCE_DIR}/proxy" "${OUTPUT_DIR}/proxy"
+        COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_SOURCE_DIR}/scripts" "${BUILD_DIR}/scripts"
+        COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_SOURCE_DIR}/scripts" "${OUTPUT_DIR}/scripts"
         COMMAND ${CMAKE_COMMAND} -E remove -f "${ARCHIVE_NAME}"
-        COMMAND ${CMAKE_COMMAND} -E tar cfv "${ARCHIVE_NAME}" "${OUTPUT_DIR}" ${BUILD_DIR}
+        COMMAND ${CMAKE_COMMAND} -E tar cfv "${ARCHIVE_NAME}" "${OUTPUT_DIR}" build
         COMMAND ${CMAKE_COMMAND} -E remove_directory "${BUILD_DIR}"
 )
 
