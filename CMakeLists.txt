@@ -43,8 +43,9 @@ target_link_libraries(${EXECUTABLE_NAME} PRIVATE
 
 # Deploy script (windeployqt)
 if(WIN32)
-    add_custom_command(TARGET ${EXECUTABLE_NAME} POST_BUILD
-            COMMAND "${Qt6_DIR}/../../bin/windeployqt.exe" --release "$<TARGET_FILE_DIR:${EXECUTABLE_NAME}>"
+    find_program(WINDEPLOYQT_EXECUTABLE windeployqt HINTS "${CMAKE_PREFIX_PATH}/../../../bin")
+    add_custom_command(
+            TARGET ${EXECUTABLE_NAME} POST_BUILD COMMAND "${WINDEPLOYQT_EXECUTABLE}" --release "$<TARGET_FILE_DIR:${EXECUTABLE_NAME}>"
     )
 endif()
 
