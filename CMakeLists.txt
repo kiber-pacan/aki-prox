@@ -9,8 +9,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-# Если собираешь локально на Windows, Qt можно прописать здесь (а не в CI)
-# или можно прокидывать через -DCMAKE_PREFIX_PATH=
+# Is it even needed?
 if(NOT CMAKE_PREFIX_PATH)
     set(CMAKE_PREFIX_PATH "C:/Qt/6.8.3/msvc2022_64/lib/cmake" CACHE PATH "Qt6 path")
 endif()
@@ -19,7 +18,7 @@ endif()
 find_package(Qt6 REQUIRED COMPONENTS Widgets)
 qt_standard_project_setup()
 
-# Исходники
+# Binaries
 qt_add_executable(${EXECUTABLE_NAME}
         main.cpp
         libs/QAnsiTextEdit-main/src/QAnsiTextEdit.cpp
@@ -27,6 +26,7 @@ qt_add_executable(${EXECUTABLE_NAME}
         sep/loader.h
 )
 
+# Libraries
 target_include_directories(${EXECUTABLE_NAME} PRIVATE
         libs/QAnsiTextEdit-main/src
         libs
@@ -41,6 +41,7 @@ target_link_libraries(${EXECUTABLE_NAME} PRIVATE
         Qt6::Widgets
 )
 
+# Deploy script (windeployqt)
 qt_generate_deploy_app_script(
         TARGET ${EXECUTABLE_NAME}
         OUTPUT_SCRIPT deploy_script
@@ -49,12 +50,12 @@ qt_generate_deploy_app_script(
 
 install(SCRIPT ${deploy_script})
 
-# Пути и архивирование
+# Setting names
 set(OUTPUT_DIR $<TARGET_FILE_DIR:${EXECUTABLE_NAME}>)
 set(BUILD_DIR "${OUTPUT_DIR}/build")
 set(ARCHIVE_NAME "${OUTPUT_DIR}/aki-prox-${CMAKE_SYSTEM_NAME}.tar.gz")
 
-# Архивация и копирование
+# Archivation and copy
 add_custom_command(TARGET ${EXECUTABLE_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E make_directory "${BUILD_DIR}"
         COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:${EXECUTABLE_NAME}>" "${BUILD_DIR}/"
