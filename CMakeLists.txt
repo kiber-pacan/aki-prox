@@ -17,10 +17,10 @@ endif()
 
 # Qt
 find_package(Qt6 REQUIRED COMPONENTS Widgets)
-#qt_standard_project_setup()
+qt_standard_project_setup()
 
 # Исходники
-add_executable(${EXECUTABLE_NAME}
+qt_add_executable(${EXECUTABLE_NAME}
         main.cpp
         libs/QAnsiTextEdit-main/src/QAnsiTextEdit.cpp
         libs/json.hpp
@@ -41,22 +41,18 @@ target_link_libraries(${EXECUTABLE_NAME} PRIVATE
         Qt6::Widgets
 )
 
+qt_generate_deploy_app_script(
+        TARGET ${EXECUTABLE_NAME}
+        OUTPUT_SCRIPT deploy_script
+        NO_UNSUPPORTED_PLATFORM_ERROR
+)
+
+install(SCRIPT ${deploy_script})
+
 # Пути и архивирование
 set(OUTPUT_DIR $<TARGET_FILE_DIR:${EXECUTABLE_NAME}>)
 set(BUILD_DIR "${OUTPUT_DIR}/build")
 set(ARCHIVE_NAME "${OUTPUT_DIR}/aki-prox-${CMAKE_SYSTEM_NAME}.tar.gz")
-
-if (WIN32)
-    find_program(WINDEPLOYQT_EXECUTABLE windeployqt HINTS "${Qt6_DIR}/../../bin")
-    if (WINDEPLOYQT_EXECUTABLE)
-        add_custom_command(TARGET ${EXECUTABLE_NAME} POST_BUILD
-                COMMAND "${WINDEPLOYQT_EXECUTABLE}" --release "$<TARGET_FILE_DIR:${EXECUTABLE_NAME}>"
-        )
-    else()
-        message(WARNING "windeployqt not found. Skipping deploy step.")
-    endif()
-    message("windeployqt.")
-endif()
 
 # Архивация и копирование
 add_custom_command(TARGET ${EXECUTABLE_NAME} POST_BUILD
