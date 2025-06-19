@@ -45,7 +45,7 @@ target_link_libraries(${EXECUTABLE_NAME} PRIVATE
 if(WIN32)
     find_program(WINDEPLOYQT_EXECUTABLE windeployqt HINTS "${Qt6_DIR}/../../bin")
     add_custom_command(TARGET ${EXECUTABLE_NAME} POST_BUILD
-            COMMAND "${WINDEPLOYQT_EXECUTABLE}" --release "$<TARGET_FILE_DIR:${EXECUTABLE_NAME}>"
+            COMMAND "${WINDEPLOYQT_EXECUTABLE}" --debug "$<TARGET_FILE_DIR:${EXECUTABLE_NAME}>"
     )
 endif()
 
