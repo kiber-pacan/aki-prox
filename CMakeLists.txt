@@ -23,7 +23,12 @@ qt_add_executable(${EXECUTABLE_NAME}
         main.cpp
         libs/QAnsiTextEdit-main/src/QAnsiTextEdit.cpp
         libs/json.hpp
-        sep/loader.h
+        sep/Manager.hpp
+        sep/Parser.hpp
+        sep/Color.h
+        sep/Logger.hpp
+        libs/base64/base64.h
+        libs/base64/base64.cpp
 )
 
 # Libraries
@@ -59,8 +64,16 @@ if(UNIX)
 add_custom_command(TARGET ${EXECUTABLE_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E make_directory "${BUILD_DIR}"
         COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:${EXECUTABLE_NAME}>" "${BUILD_DIR}/"
-        COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_SOURCE_DIR}/scripts" "${BUILD_DIR}/scripts"
-        COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_SOURCE_DIR}/scripts" "${OUTPUT_DIR}/scripts"
+
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${BUILD_DIR}/scripts"
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${OUTPUT_DIR}/scripts"
+
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${BUILD_DIR}/proxies"
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${OUTPUT_DIR}/proxies"
+
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${BUILD_DIR}/config"
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${OUTPUT_DIR}/config"
+
         COMMAND ${CMAKE_COMMAND} -E remove -f "${ARCHIVE_NAME}"
         COMMAND ${CMAKE_COMMAND} -E tar cfv "${ARCHIVE_NAME}" "${OUTPUT_DIR}" build
         COMMAND ${CMAKE_COMMAND} -E remove_directory "${BUILD_DIR}"
